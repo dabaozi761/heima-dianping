@@ -7,12 +7,14 @@ import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import static com.hmdp.utils.RedisConstants.CACHE_SHOP_KEY;
+import java.util.concurrent.TimeUnit;
+
+import static com.hmdp.utils.RedisConstants.*;
 
 /**
  * <p>
@@ -40,11 +42,27 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         //4.不存在，根据id查询数据库
         Shop shop = getById(id);
         //5.不存在，返回错误
-        if (shop == null){
-            return Result.fail("商铺不存在");
+        if (shop == null) {
+            stringRedisTemplate.opsForValue().set(CACHE_SHOP_KEY+id,"", CACHE_NULL_TTL, TimeUnit.MINUTES);
         }
         //6.存在写入redis
-        stringRedisTemplate.opsForValue().set(CACHE_SHOP_KEY,JSONUtil.toJsonStr(shop));
+        stringRedisTemplate.opsForValue().set(CACHE_SHOP_KEY+id, JSONUtil.toJsonStr(shop), CACHE_SHOP_TTL, TimeUnit.MINUTES);
         return Result.ok(shop);
+    }
+
+    @Transactional
+    @Override
+    public Result updateShop(Shop shop) {
+        //1.更新数据库
+        Long id = shop.getId();
+        if (id == null) {
+            return Result.fail("店铺id不存在");
+        }
+        updateById(shop);
+
+        stringRedisTemplate.delete(CACHE_SHOP_KEY + id);
+
+        //2.删除缓存
+        return Result.ok();
     }
 }

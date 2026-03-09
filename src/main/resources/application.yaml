@@ -5,7 +5,7 @@ spring:
     name: hmdp
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/黑马点评
+    url: jdbc:mysql://localhost:3306/黑马点评?characterEncoding=utf8&useSSL=false
     username: root
     password: 1234
   redis:
