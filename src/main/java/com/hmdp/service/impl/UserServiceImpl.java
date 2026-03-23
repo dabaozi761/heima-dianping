@@ -115,7 +115,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setNickName( USER_NICK_NAME_PREFIX + RandomUtil.randomString(10));
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
-
         save(user);
         return user;
     }
